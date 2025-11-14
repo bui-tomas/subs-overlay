@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 250px;
+      padding: 15px;
+      font-family: Arial, sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    
+    h3 {
+      margin: 0 0 15px 0;
+      font-size: 16px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    button:hover {
+      background: #0052a3;
+    }
+    
+    .info {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #333;
+    }
+    
+    .status {
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    
+    .status.enabled {
+      background: #004d00;
+      color: #00ff00;
+    }
+    
+    .status.disabled {
+      background: #4d0000;
+      color: #ff6666;
+    }
+  </style>
+</head>
+<body>
+  <h3>Subtitle Overlay</h3>
+  
+  <div id="status" class="status disabled">Overlay: Disabled</div>
+  
+  <button id="toggleBtn">Toggle Overlay</button>
+  
+  <div class="info">
+    <strong>Keyboard shortcut:</strong><br>
+    Ctrl + Shift + S
+    <br><br>
+    Drag the overlay by its header to reposition it anywhere on the page.
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Video Subtitle Overlay",
+  "version": "1.0",
+  "description": "Extracts and displays video subtitles in a draggable overlay",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "src/images/icon16.png",
+      "48": "src/images/icon48.png",
+      "128": "src/images/icon128.png"
+    }
+  }
+}
