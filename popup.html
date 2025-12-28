@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <style>
     body {
-      width: 250px;
+      width: 280px;
       padding: 15px;
       font-family: Arial, sans-serif;
       background: #1a1a1a;
@@ -32,6 +32,21 @@
       background: #0052a3;
     }
     
+    .file-input-wrapper {
+      margin-bottom: 10px;
+    }
+    
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
     .info {
       font-size: 12px;
       color: #aaa;
@@ -56,6 +71,13 @@
       background: #4d0000;
       color: #ff6666;
     }
+    
+    .subtitle-count {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 10px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -63,13 +85,23 @@
   
   <div id="status" class="status disabled">Overlay: Disabled</div>
   
+  <div class="file-input-wrapper">
+    <input type="file" id="subtitleFile" accept=".json" />
+  </div>
+  
+  <div id="subtitleCount" class="subtitle-count">No subtitles loaded</div>
+  
   <button id="toggleBtn">Toggle Overlay</button>
   
   <div class="info">
     <strong>Keyboard shortcut:</strong><br>
     Ctrl + Shift + S
     <br><br>
-    Drag the overlay by its header to reposition it anywhere on the page.
+    <strong>Usage:</strong><br>
+    1. Upload a subtitle JSON file<br>
+    2. Open a video page<br>
+    3. Press Ctrl+Shift+S to show/hide overlay<br>
+    4. Drag overlay to reposition
   </div>
   
   <script src="popup.js"></script>

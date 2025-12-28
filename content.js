@@ -6,7 +6,8 @@
   let overlayWindow = null;
   let isEnabled = false;
   let currentVideo = null;
-  let currentTrack = null;
+  let subtitles = []; // Will hold loaded subtitles from JSON
+  const TIMESTAMP_OFFSET = 18.8; // Offset to subtract from all timestamps (hardcoded for now)
 
   // Create the draggable overlay
   function createOverlay() {
@@ -17,7 +18,9 @@
     overlayWindow.id = 'subtitle-overlay-window';
     overlayWindow.innerHTML = `
       <div id="subtitle-overlay-content">
-        <div id="current-subtitle">Test subtitle text</div>
+        <div id="subtitle-hanzi"></div>
+        <div id="subtitle-pinyin"></div>
+        <div id="subtitle-english"></div>
       </div>
     `;
     
@@ -86,6 +89,24 @@
     }
   }
 
+  // Load subtitles from JSON file
+  async function loadSubtitles() {
+    try {
+      // Try to load from chrome storage first (can be set by user uploading JSON)
+      const result = await chrome.storage.local.get(['subtitlesData']);
+      if (result.subtitlesData) {
+        subtitles = result.subtitlesData.subtitles || [];
+        console.log('Loaded subtitles from storage:', subtitles.length);
+        return;
+      }
+      
+      // If no stored data, subtitles array stays empty
+      console.log('No subtitles loaded');
+    } catch (error) {
+      console.error('Error loading subtitles:', error);
+    }
+  }
+
   // Extract and sync subtitles with video
   function startSubtitleSync() {
     currentVideo = document.querySelector('video');
@@ -95,33 +116,70 @@
       return;
     }
 
-    // Try to find text track
-    if (currentVideo.textTracks.length === 0) {
-      console.log('No text tracks found');
-      return;
-    }
-
-    currentTrack = currentVideo.textTracks[0];
-    currentTrack.mode = 'hidden'; // Enable track but don't show native subs
-    
-    const subtitleDisplay = document.getElementById('current-subtitle');
+    const hanziDisplay = document.getElementById('subtitle-hanzi');
+    const pinyinDisplay = document.getElementById('subtitle-pinyin');
+    const englishDisplay = document.getElementById('subtitle-english');
 
     // Update subtitle based on video time
     function updateSubtitle() {
-      if (!currentTrack || !currentTrack.cues) return;
+      if (subtitles.length === 0) {
+        // Fallback to trying text tracks if no JSON subtitles loaded
+        tryTextTracks();
+        return;
+      }
 
-      const currentTime = currentVideo.currentTime;
-      let activeSubtitle = '';
+      // Apply offset to video time
+      const currentTime = currentVideo.currentTime + TIMESTAMP_OFFSET;
+      
+      // Clear current subtitles
+      let activeSubtitle = null;
 
-      for (let i = 0; i < currentTrack.cues.length; i++) {
-        const cue = currentTrack.cues[i];
-        if (currentTime >= cue.startTime && currentTime <= cue.endTime) {
-          activeSubtitle = cue.text;
+      // Find the subtitle for current time
+      for (let i = 0; i < subtitles.length; i++) {
+        const sub = subtitles[i];
+        if (currentTime >= sub.start && currentTime <= sub.end) {
+          activeSubtitle = sub;
           break;
         }
       }
 
-      subtitleDisplay.textContent = activeSubtitle;
+      if (activeSubtitle) {
+        hanziDisplay.textContent = activeSubtitle.hanzi || '';
+        pinyinDisplay.textContent = activeSubtitle.pinyin || '';
+        englishDisplay.textContent = activeSubtitle.english || '';
+      } else {
+        hanziDisplay.textContent = '';
+        pinyinDisplay.textContent = '';
+        englishDisplay.textContent = '';
+      }
+    }
+
+    // Fallback to text tracks if JSON not available
+    function tryTextTracks() {
+      if (currentVideo.textTracks.length === 0) {
+        console.log('No text tracks found');
+        return;
+      }
+
+      const track = currentVideo.textTracks[0];
+      track.mode = 'hidden';
+      
+      const englishDisplay = document.getElementById('subtitle-english');
+      
+      const currentTime = currentVideo.currentTime;
+      let activeText = '';
+
+      if (track.cues) {
+        for (let i = 0; i < track.cues.length; i++) {
+          const cue = track.cues[i];
+          if (currentTime >= cue.startTime && currentTime <= cue.endTime) {
+            activeText = cue.text;
+            break;
+          }
+        }
+      }
+
+      englishDisplay.textContent = activeText;
     }
 
     // Update on timeupdate
@@ -141,13 +199,14 @@
   }
 
   // Toggle overlay on/off
-  function toggleOverlay() {
+  async function toggleOverlay() {
     console.log('Toggle called, isEnabled:', isEnabled);
     if (isEnabled) {
       console.log('Destroying overlay');
       destroyOverlay();
     } else {
       console.log('Creating overlay');
+      await loadSubtitles(); // Load subtitles before creating overlay
       createOverlay();
       console.log('Overlay element:', overlayWindow);
       console.log('Starting subtitle sync');
@@ -174,6 +233,17 @@
     if (request.action === 'toggleOverlay') {
       toggleOverlay();
       sendResponse({ enabled: isEnabled });
+    } else if (request.action === 'loadSubtitles') {
+      // Allow loading subtitles from popup
+      if (request.subtitlesData) {
+        chrome.storage.local.set({ subtitlesData: request.subtitlesData }, () => {
+          console.log('Subtitles saved to storage');
+          loadSubtitles().then(() => {
+            sendResponse({ success: true, count: subtitles.length });
+          });
+        });
+        return true; // Keep message channel open for async response
+      }
     }
   });
 
